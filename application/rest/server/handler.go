@@ -10,6 +10,11 @@ import (
 type Handler struct {
 }
 
+func (h Handler) TestHandler(c *gin.Context) {
+
+	c.JSON(http.StatusOK, gin.H{"message": "Hello From Gin"})
+}
+
 func (h Handler) ModifyJobApplicationWithId(c *gin.Context, id string) {
 
 	c.JSON(http.StatusOK, gin.H{"id": id})
@@ -22,7 +27,16 @@ func (h Handler) ListOrSearchAvailableJobs(c *gin.Context, params model.ListOrSe
 
 func (h Handler) CreateJob(c *gin.Context) {
 
-	c.JSON(http.StatusOK, gin.H{"id": "CreateJob"})
+	var j model.Job
+
+	if err := c.ShouldBindJSON(&j); err == nil {
+		c.JSON(http.StatusOK, gin.H{"message": "Job creation successful."})
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Job creation failed!",
+			"error":   err.Error(),
+		})
+	}
 }
 
 func (h Handler) DeleteJobWithId(c *gin.Context, id string) {
@@ -52,12 +66,28 @@ func (h Handler) CreateJobApplication(c *gin.Context, id string) {
 
 func (h Handler) StartSession(c *gin.Context) {
 
-	c.JSON(http.StatusOK, gin.H{"id": "StartSession"})
+	var s model.Session
+	if err := c.ShouldBindJSON(&s); err == nil {
+		c.JSON(http.StatusOK, gin.H{"message": "Session creation successful."})
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Session creation failed!",
+			"error":   err.Error(),
+		})
+	}
 }
 
 func (h Handler) RegisterUser(c *gin.Context) {
 
-	c.JSON(http.StatusOK, gin.H{"id": "RegisterUser"})
+	var u model.User
+	if err := c.ShouldBindJSON(&u); err == nil {
+		c.JSON(http.StatusOK, gin.H{"message": "User creation successful."})
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "User creation failed!",
+			"error":   err.Error(),
+		})
+	}
 }
 
 func (h Handler) DeleteUserWithId(c *gin.Context, id string) {

@@ -1,0 +1,4 @@
+environments:
+  dev:
+    port: :3000
+    dsn: mongodb://localhost:27017

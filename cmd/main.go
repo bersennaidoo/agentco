@@ -2,16 +2,23 @@ package main
 
 import (
 	"github.com/bersennaidoo/agentco/application/rest/server"
+	"github.com/bersennaidoo/agentco/physical/config"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
 
+	cfg := config.NewCFGData()
+
+	_ = config.MongoClient(cfg)
+
 	handler := server.Handler{}
 
 	router := gin.Default()
 
-	server.RegisterHandlers(router, handler)
+	srvWithOptions := server.GinServerOptions{}
 
-	router.Run(":3000")
+	server.RegisterHandlersWithOptions(router, handler, srvWithOptions)
+
+	router.Run(cfg.Port)
 }

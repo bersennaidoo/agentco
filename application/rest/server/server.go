@@ -10,69 +10,27 @@ import (
 	"path"
 	"strings"
 
+	"github.com/bersennaidoo/agentco/domain/core/contracts"
 	"github.com/bersennaidoo/agentco/domain/core/model"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/gin-gonic/gin"
 	"github.com/oapi-codegen/runtime"
 )
 
-// ServerInterface represents all server handlers.
-type ServerInterface interface {
-	// Modify Job Application
-	// (PUT /job-applications/{id})
-	ModifyJobApplicationWithId(c *gin.Context, id string)
-	// List/Search Available Jobs
-	// (GET /jobs)
-	ListOrSearchAvailableJobs(c *gin.Context, params model.ListOrSearchAvailableJobsParams)
-	// Create Job
-	// (POST /jobs)
-	CreateJob(c *gin.Context)
-	// Delete Job
-	// (DELETE /jobs/{id})
-	DeleteJobWithId(c *gin.Context, id string)
-	// View Job
-	// (GET /jobs/{id})
-	ViewJobWithId(c *gin.Context, id string)
-	// Modify Job
-	// (PUT /jobs/{id})
-	ModifyJobWithId(c *gin.Context, id string)
-	// List Applications For Job
-	// (GET /jobs/{id}/job-applications)
-	ViewApplicationsForJob(c *gin.Context, id string)
-	// Create Job Application
-	// (POST /jobs/{id}/job-applications)
-	CreateJobApplication(c *gin.Context, id string)
-	// Start Session (Login)
-	// (POST /sessions)
-	StartSession(c *gin.Context)
-	// Register User
-	// (POST /users)
-	RegisterUser(c *gin.Context)
-	// Delete User
-	// (DELETE /users/{id})
-	DeleteUserWithId(c *gin.Context, id string)
-	// View User
-	// (GET /users/{id})
-	ViewUserWithId(c *gin.Context, id string)
-	// Modify User
-	// (PUT /users/{id})
-	ModifyUserWithId(c *gin.Context, id string)
-	// List Applications For User
-	// (GET /users/{id}/job-applications)
-	ViewApplicationsForUser(c *gin.Context, id int)
-	// List Jobs For User
-	// (GET /users/{id}/jobs)
-	ListJobsForUser(c *gin.Context, id string)
-}
-
 // ServerInterfaceWrapper converts contexts to parameters.
 type ServerInterfaceWrapper struct {
-	Handler            ServerInterface
+	Handler            contracts.ServerInterface
 	HandlerMiddlewares []MiddlewareFunc
 	ErrorHandler       func(*gin.Context, error, int)
 }
 
 type MiddlewareFunc func(c *gin.Context)
+
+// WrapperTestHandler operation middleware
+func (siw *ServerInterfaceWrapper) WrapperTestHandler(c *gin.Context) {
+
+	siw.Handler.TestHandler(c)
+}
 
 // ModifyJobApplicationWithId operation middleware
 func (siw *ServerInterfaceWrapper) ModifyJobApplicationWithId(c *gin.Context) {
@@ -501,12 +459,12 @@ type GinServerOptions struct {
 }
 
 // RegisterHandlers creates http.Handler with routing matching OpenAPI spec.
-func RegisterHandlers(router gin.IRouter, si ServerInterface) {
+func RegisterHandlers(router gin.IRouter, si contracts.ServerInterface) {
 	RegisterHandlersWithOptions(router, si, GinServerOptions{})
 }
 
 // RegisterHandlersWithOptions creates http.Handler with additional options
-func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options GinServerOptions) {
+func RegisterHandlersWithOptions(router gin.IRouter, si contracts.ServerInterface, options GinServerOptions) {
 	errorHandler := options.ErrorHandler
 	if errorHandler == nil {
 		errorHandler = func(c *gin.Context, err error, statusCode int) {
@@ -535,6 +493,7 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.PUT(options.BaseURL+"/users/:id", wrapper.ModifyUserWithId)
 	router.GET(options.BaseURL+"/users/:id/job-applications", wrapper.ViewApplicationsForUser)
 	router.GET(options.BaseURL+"/users/:id/jobs", wrapper.ListJobsForUser)
+	router.GET("/", wrapper.WrapperTestHandler)
 }
 
 // Base64 encoded, gzipped, json marshaled Swagger object
