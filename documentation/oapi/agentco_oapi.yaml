@@ -1,340 +1,347 @@
-openapi: 3.0.3
+openapi: 3.0.0
 info:
   title: AgentCo API
-  version: "0.1"
+  version: "1.0"
+servers:
+- url: /api
 tags:
-  - name: Users
-    description: User-related operations
-  - name: Jobs
-    description: Job-related operations
+- name: Users
+- name: Jobs
 paths:
   /users:
     post:
       tags:
       - Users
-      summary: Register User
-      operationId: registerUser
+      summary: Register User Account
+      operationId: post_users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
       responses:
-        '201':
+        "201":
           description: Created
           headers:
             Location:
+              style: simple
+              explode: false
               schema:
                 type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/User'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+      x-swagger-router-controller: Users
       security: []
   /users/{id}:
-    parameters:
-      - schema:
-          type: string
-        name: id
-        in: path
-        required: true
     get:
       tags:
       - Users
-      summary: View User
-      operationId: viewUserWithId
+      summary: Get User Information
+      operationId: get_users_id
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+      x-swagger-router-controller: Users
     put:
       tags:
       - Users
-      summary: Modify User
-      operationId: modifyUserWithId
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
+      summary: Update User Account
+      operationId: put_users_id
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/User'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+      x-swagger-router-controller: Users
     delete:
       tags:
       - Users
-      summary: Delete User
-      operationId: deleteUserWithId
+      summary: Delete User Account
+      operationId: delete_users_id
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
       responses:
-        '204':
+        "204":
           description: No Content
+      x-swagger-router-controller: Users
+  /users/{id}/jobs:
+    get:
+      tags:
+      - Jobs
+      - Users
+      summary: Get a list of Jobs that are associated with this user.
+      description: |
+        - **TODO** Find out about returing arrays directly (without being wrapped in an envelope).
+      operationId: get_jobs_for_user
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: A list of jobs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Job'
+                x-content-type: application/json
+      x-swagger-router-controller: Jobs
+  /users/{id}/job-applications:
+    get:
+      tags:
+      - Jobs
+      - Users
+      summary: Get a list of Job Applications that are associated with this user.
+      operationId: get_job_applications_for_user
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: A list of jobs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JobApplication'
+                x-content-type: application/json
+      x-swagger-router-controller: Jobs
   /jobs:
+    get:
+      tags:
+      - Jobs
+      summary: List available jobs
+      operationId: get_jobs
+      parameters:
+      - name: limit
+        in: query
+        description: Limits the number of results the endpoint returns.
+        required: false
+        style: form
+        explode: true
+        schema:
+          maximum: 50
+          minimum: 0
+          type: integer
+          default: 20
+      - name: offset
+        in: query
+        description: Skips these many items from the response.
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: integer
+          default: 0
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200'
+      x-swagger-router-controller: Jobs
     post:
       tags:
       - Jobs
-      summary: Create Job
-      operationId: createJob
-      responses:
-        '201': 
-          description: Created
-          headers:
-            Location:
-              schema:
-                type: string
-        '400': 
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OASError' 
-        '401': 
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OASError' 
-        '403': 
-          description: Forbidden
-          content:
-            application/problem+json: 
-              schema:
-                $ref: '#/components/schemas/Problem' 
-    get:
-      tags:
-      - Jobs
-      summary: List/Search Available Jobs
-      operationId: listOrSearchAvailableJobs
-      parameters:
-      - name: start_time_before
-        in: query
-        description: Search jobs starting before this date and time.
-        schema:
-          type: string
-          format: date-time
-      - name: start_time_after
-        in: query
-        description: Search jobs starting after this date and time.
-        schema:
-          type: string
-          format: date-time
-      - name: end_time_before
-        in: query
-        description: Search jobs ending before this date and time.
-        schema:
-          type: string
-          format: date-time
-      - name: end_time_after
-        in: query
-        description: Search jobs ending after this date and time.
-        schema:
-          type: string
-          format: date-time
-      - name: activity
-        in: query
-        description: Performs a full-text search for the phrase entered in job activities.
-        schema:
-          type: string
-      - name: pets
-        in: query
-        description: Searches for pets matching specific criteria.
-        style: deepObject
-        schema:
-          type: object
-          properties:
-            age_below:
-              type: integer
-              description: Return only pets with this age or younger.
-            age_above:
-              type: integer
-              description: Return only pets with this age or older.
-            species:
-              type: string
-              description: Return only pets with this species. Provide multiple species as comma-separated values.
-      - name: limit
-        in: query
-        description: The maximum number of results to return.
-        schema:
-          type: integer
-          default: 20
-          maximum: 100
-      - name: cursor
-        in: query
-        description: Use the cursor from the response to access more results.
-        schema:
-          type: string
-      - name: sort
-        in: query
-        description: |
-          Indicate the sorting key and direction for the results.
-          Use the field name, suffixed with ":asc" for ascending
-          or ":desc" for descending order.
-          Valid fields: start_time, end_time
-        schema:
-          type: string
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Job'
-                  cursor:
-                    type: string
-                    description: Cursor for the next result page.
-                    nullable: true
-  /jobs/{id}:
-    parameters:
-      - schema:
-          type: string
-        name: id
-        in: path
-        required: true
-    get:
-      tags:
-      - Jobs
-      summary: View Job
-      operationId: viewJobWithId
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Job'
-    put:
-      tags:
-      - Jobs
-      summary: Modify Job
-      operationId: modifyJobWithId
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Job'
+      summary: Post new Job
+      operationId: post_jobs
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/Job'
-    delete:
-      tags:
-      - Jobs
-      summary: Delete Job
-      operationId: deleteJobWithId
       responses:
-        '204':
-          description: No Content
-  /jobs/{id}/job-applications:
-    parameters:
-      - schema:
-          type: string
-        name: id
-        in: path
-        required: true
+        "201":
+          description: Created
+          headers:
+            Location:
+              style: simple
+              explode: false
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+      x-swagger-router-controller: Jobs
+  /jobs/{id}:
     get:
       tags:
       - Jobs
-      summary: List Applications For Job
-      operationId: viewApplicationsForJob
+      summary: Get Job Details
+      operationId: get_jobs_id
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/JobApplication'
+                $ref: '#/components/schemas/Job'
+      x-swagger-router-controller: Jobs
+    put:
+      tags:
+      - Jobs
+      summary: Update Job Details
+      operationId: put_jobs_id
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Job'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+      x-swagger-router-controller: Jobs
+    delete:
+      tags:
+      - Jobs
+      summary: Remove Job
+      operationId: delete_jobs_id
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+      x-swagger-router-controller: Jobs
+  /jobs/{id}/job-applications:
+    get:
+      tags:
+      - Jobs
+      summary: Get all applications for this job.
+      operationId: get_applications_by_job_id
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JobApplication'
+                x-content-type: application/json
+      x-swagger-router-controller: Jobs
     post:
       tags:
       - Jobs
-      summary: Create Job Application
-      operationId: createJobApplication
-      responses:
-        '201':
-          description: Created
-          headers:
-            Location:
-              schema:
-                type: string
+      summary: Create a job application
+      operationId: create_job_application
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/JobApplication'
-  /users/{id}/jobs:
-    parameters:
-      - schema:
-          type: string
-        name: id
-        in: path
-        required: true
-    get:
-      tags:
-      - Users
-      summary: List Jobs For User
-      operationId: listJobsForUser
       responses:
-        '200':
-          description: OK
+        "200":
+          description: Created
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Job'
-  /users/{id}/job-applications:
-    parameters:
-    - name: id
-      in: path
-      required: true
-      schema:
-        type: integer
-    get:
-      tags:
-      - Users
-      summary: List Applications For User
-      operationId: viewApplicationsForUser
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/JobApplication'
+                $ref: '#/components/schemas/JobApplication'
+      x-swagger-router-controller: Jobs
   /job-applications/{id}:
-    parameters:
-      - schema:
-          type: string
-        name: id
-        in: path
-        required: true
     put:
       tags:
       - Jobs
-      summary: Modify Job Application
-      operationId: modifyJobApplicationWithId
+      summary: Update application details
+      operationId: update_job_application
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
       requestBody:
         description: Update the application details
         content:
@@ -342,14 +349,33 @@ paths:
             schema:
               $ref: '#/components/schemas/JobApplication'
       responses:
-        '200':
-          description: OK
+        "200":
+          description: Job Application details
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/JobApplication'
+                x-content-type: application/json
+      x-swagger-router-controller: Jobs
+    delete:
+      tags:
+      - Jobs
+      summary: Delete application
+      operationId: delete_job_application
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "204":
+          description: Job application details
+      x-swagger-router-controller: Jobs
   /sessions:
     post:
       tags:
@@ -374,176 +400,267 @@ paths:
                 password:
                   type: string
       security: []
+      x-swagger-router-controller: Users
 components:
   schemas:
-    User:
+    JobApplication:
+      title: JobApplication
       type: object
       properties:
         id:
-          type: integer
-          readOnly: true 
+          type: string
+          description: Job application id.
+          readOnly: true
+        user_id:
+          type: string
+          description: Id of user requesting job
+          readOnly: true
+        job_id:
+          type: string
+          description: Job id
+          readOnly: true
+        status:
+          type: string
+          default: APPLYING
+          enum:
+          - APPLYING
+          - ACCEPTED
+          - DENIED
+      example:
+        user_id: user_id
+        job_id: job_id
+        id: id
+        status: APPLYING
+    User:
+      title: User
+      required:
+      - email
+      - full_name
+      - roles
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
         email:
           type: string
-          format: email 
+          format: email
         password:
           type: string
-          format: password 
-          writeOnly: true 
-          minLength: 8 
+          format: password
         full_name:
           type: string
-          minLength: 2 
-          maxLength: 50
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
         roles:
-          type: array 
-          minItems: 1 
-          uniqueItems: true 
+          minLength: 1
+          type: array
           items:
-            type: string 
-            enum: 
-              - PetOwner
-              - PetSitter
-              - Admin
-      required: 
-        - email
-        - full_name
-        - roles
+            type: string
+            enum:
+            - PetOwner
+            - PetSitter
+            - Admin
+      example:
+        password: ""
+        full_name: full_name
+        updated_at: 2000-01-23T04:56:07.000+00:00
+        roles:
+        - PetOwner
+        - PetOwner
+        created_at: 2000-01-23T04:56:07.000+00:00
+        id: id
+        email: ""
     Job:
+      title: Job
+      required:
+      - activities
+      - description
+      - ends_at
+      - starts_at
       type: object
       properties:
         id:
-          type: integer
-          readOnly: true 
+          type: string
+          readOnly: true
         creator_user_id:
-          type: integer
-          readOnly: true 
-        start_time:
           type: string
-          format: date-time 
-        end_time:
+          description: The user who posted this job.
+          readOnly: true
+        worker_user_id:
           type: string
-          format: date-time 
-        activity:
-          type: string
-          minLength: 5 
-          maxLength: 500
-        dog:
-          allOf:
-          - $ref: '#/components/schemas/Dog'
-          - description: |
-              This is deprecated, prefer to use `pets`.
-              If both exist, `dog` will be ignored and `pets` will be used.
-            deprecated: true 
-        pets:
+          description: When the job is open, null. When the job is filled, the user
+            who is working on it.
+          nullable: true
+          readOnly: true
+        applications:
           type: array
-          minItems: 1 
-          maxItems: 10
           items:
-            $ref: '#/components/schemas/Pet'
-    Dog:
+            $ref: '#/components/schemas/JobApplication'
+        starts_at:
+          type: string
+          description: The date and time when this job starts.
+          format: date-time
+        ends_at:
+          type: string
+          description: The date and time when this job ends.
+          format: date-time
+        dog:
+          $ref: '#/components/schemas/Job_dog'
+        activities:
+          minLength: 1
+          type: array
+          items:
+            type: string
+            enum:
+            - walk
+            - dropin
+            - boarding
+            - sitting
+            - daycare
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        description:
+          type: string
+      example:
+        creator_user_id: creator_user_id
+        starts_at: 2000-01-23T04:56:07.000+00:00
+        updated_at: 2000-01-23T04:56:07.000+00:00
+        worker_user_id: worker_user_id
+        activities:
+        - walk
+        - walk
+        created_at: 2000-01-23T04:56:07.000+00:00
+        description: description
+        id: id
+        ends_at: 2000-01-23T04:56:07.000+00:00
+        dog:
+          size: small
+          name: name
+          years_old: 0
+          breed: breed
+        applications:
+        - user_id: user_id
+          job_id: job_id
+          id: id
+          status: APPLYING
+        - user_id: user_id
+          job_id: job_id
+          id: id
+          status: APPLYING
+    inline_response_200:
       type: object
       properties:
-        species:
-          type: string
-        breed:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Job'
+        total_items:
+          type: integer
+          description: The total number of items, regardless of how many this response
+            includes.
+        has_more:
+          type: boolean
+          description: Indicates that more items are available and can be retrieved
+            with different offset and limit parameters.
+      example:
+        has_more: true
+        items:
+        - creator_user_id: creator_user_id
+          starts_at: 2000-01-23T04:56:07.000+00:00
+          updated_at: 2000-01-23T04:56:07.000+00:00
+          worker_user_id: worker_user_id
+          activities:
+          - walk
+          - walk
+          created_at: 2000-01-23T04:56:07.000+00:00
+          description: description
+          id: id
+          ends_at: 2000-01-23T04:56:07.000+00:00
+          dog:
+            size: small
+            name: name
+            years_old: 0
+            breed: breed
+          applications:
+          - user_id: user_id
+            job_id: job_id
+            id: id
+            status: APPLYING
+          - user_id: user_id
+            job_id: job_id
+            id: id
+            status: APPLYING
+        - creator_user_id: creator_user_id
+          starts_at: 2000-01-23T04:56:07.000+00:00
+          updated_at: 2000-01-23T04:56:07.000+00:00
+          worker_user_id: worker_user_id
+          activities:
+          - walk
+          - walk
+          created_at: 2000-01-23T04:56:07.000+00:00
+          description: description
+          id: id
+          ends_at: 2000-01-23T04:56:07.000+00:00
+          dog:
+            size: small
+            name: name
+            years_old: 0
+            breed: breed
+          applications:
+          - user_id: user_id
+            job_id: job_id
+            id: id
+            status: APPLYING
+          - user_id: user_id
+            job_id: job_id
+            id: id
+            status: APPLYING
+        total_items: 0
+    Job_dog:
+      required:
+      - breed
+      - size
+      - years_old
+      type: object
+      properties:
+        name:
           type: string
         size:
           type: string
-      required:
-        - species
-    Cat:
-      type: object
-      properties:
-        species:
-          type: string
+          enum:
+          - small
+          - medium
+          - large
+        years_old:
+          type: integer
         breed:
           type: string
-      required:
-        - species
-    Pet:
-      allOf:
-        - type: object
-          properties:
-            name:
-              type: string
-              minLength: 2
-              maxLength: 20
-            age:
-              type: integer
-              minimum: 1
-              maximum: 100
-        - oneOf:
-            - $ref: '#/components/schemas/Cat'
-            - $ref: '#/components/schemas/Dog'
-          discriminator:
-            propertyName: species
-            mapping:
-              Cat: '#/components/schemas/Cat'
-              Dog: '#/components/schemas/Dog'
-    JobApplication:
-      type: object
-      properties:
-        id:
-          type: string
-          readOnly: true 
-        status:
-          type: string
-          default: applying 
-          enum: 
-            - applying
-            - approved
-            - rejected
-        user_id:
-          type: string
-          readOnly: true 
-        job_id:
-          type: string
-          readOnly: true 
+      example:
+        size: small
+        name: name
+        years_old: 0
+        breed: breed
     Session:
+      title: Session
       type: object
       properties:
         user_id:
           type: string
         auth_header:
           type: string
-    OASError: 
-      type: object
-      properties:
-        message:
-          type: string
-          description: Human-readable error message
-        errors:
-          type: array
-          items:
-            type: object
-            properties:
-              path:
-                type: string
-                description: For input validation errors, identifies where in the JSON request body the error occured
-              message:
-                type: string
-                description: Human-readable error message
-              errorCode:
-                type: string
-                description: Code indicating error type
-    Problem: 
-      type: object
-      properties:
-        type:
-          type: string
-          description: URI indicating error type
-        title:
-          type: string
-          description: Human-readable error title
-        status:
-          type: integer
-          description: HTTP status code
-        detail:
-          type: string
-          description: Human-readable error details
-        instance:
-          type: string
-          description: URI indicating error instance
   securitySchemes:
     SessionToken:
       type: apiKey
